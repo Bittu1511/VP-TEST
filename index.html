@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#C84B31">
+<meta name="description" content="विदर्भ प्रॉपर्टीज - महाराष्ट्र / विदर्भ मधील जमीन, घर आणि मालमत्ता खरेदी-विक्री">
+<title>Vidarbh Properties | विदर्भ प्रॉपर्टीज</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%23C84B31'/><text y='72' x='50' text-anchor='middle' font-size='52' font-weight='900' font-family='Arial,sans-serif' fill='white'>VP</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%23C84B31'/><text y='72' x='50' text-anchor='middle' font-size='52' font-weight='900' font-family='Arial,sans-serif' fill='white'>VP</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Styles -->
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spin"></div>
+  <div style="font-size:14px;font-weight:700;color:var(--brand)">लोड होत आहे...</div>
+</div>
+
+<nav>
+  <div class="nav-logo" onclick="showPage('home')">
+    <div class="nav-logo-icon">VP</div>
+    <div><div class="nav-logo-text">VidarbhProperties</div><div class="nav-logo-sub">विदर्भ प्रॉपर्टीज</div></div>
+  </div>
+  <div class="nav-actions">
+    <button class="btn-lang" onclick="toggleLang()" id="langBtn">मराठी</button>
+    <button class="btn-login-nav" id="navLoginBtn" onclick="openLoginModal()">
+      <span id="navLoginIcon">👤</span>
+      <span id="navLoginText" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Login</span>
+    </button>
+    <button class="btn-post-nav" onclick="checkLoginPost()">+ जाहिरात</button>
+  </div>
+</nav>
+
+<div class="overlay" id="loginOverlay" onclick="if(event.target===this)closeModal('loginOverlay')">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title" id="lmTitle">Login / Sign Up</div>
+      <button class="modal-close" onclick="closeModal('loginOverlay')">✕</button>
+    </div>
+    <div class="modal-sub" id="lmSub">Email OTP ने login करा • No password needed</div>
+    <div id="lm-s1">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" type="email" id="lm-email" placeholder="yourname@gmail.com"
+          onkeydown="if(event.key==='Enter')sendLoginOTP()">
+      </div>
+      <button class="btn-next" id="lmBtn" onclick="sendLoginOTP()">📧 OTP पाठवा</button>
+    </div>
+    <div id="lm-s2" style="display:none">
+      <div class="info-box info-green">📧 Gmail तपासा! <strong>6-digit OTP</strong> पाठवला.<br>Spam folder पण तपासा.</div>
+      <div class="otp-inputs" id="lm-otp">
+        <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]*" oninput="onav(this,0,'lm-otp')" onkeydown="otpKey(event,this,0,'lm-otp')">
+        <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]*" oninput="onav(this,1,'lm-otp')" onkeydown="otpKey(event,this,1,'lm-otp')">
+        <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]*" oninput="onav(this,2,'lm-otp')" onkeydown="otpKey(event,this,2,'lm-otp')">
+        <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]*" oninput="onav(this,3,'lm-otp')" onkeydown="otpKey(event,this,3,'lm-otp')">
+        <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]*" oninput="onav(this,4,'lm-otp')" onkeydown="otpKey(event,this,4,'lm-otp')">
+        <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]*" oninput="onav(this,5,'lm-otp')" onkeydown="otpKey(event,this,5,'lm-otp')">
+      </div>
+      <button class="btn-next" onclick="verifyLoginOTP()">✓ Verify & Login</button>
+      <div style="text-align:center;margin-top:10px;display:flex;gap:16px;justify-content:center">
+        <button style="background:none;border:none;color:var(--brand);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit" onclick="sendLoginOTP()">🔄 Resend OTP</button>
+        <button style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit" onclick="document.getElementById('lm-s1').style.display='block';document.getElementById('lm-s2').style.display='none'">← बदलवा</button>
+      </div>
+    </div>
+    <div id="lm-s3" style="display:none;text-align:center;padding:8px 0">
+      <div style="font-size:44px;margin-bottom:10px">✅</div>
+      <div style="font-size:16px;font-weight:800;color:var(--dark)">Login झाले!</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px" id="lm-show-email"></div>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button class="btn-call" style="border-radius:10px;flex:1" onclick="closeModal('loginOverlay');showPage('dash')">📋 My Listings</button>
+        <button style="flex:1;background:var(--bg);color:var(--dark);border:1.5px solid var(--border);border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit" onclick="doLogout()">Logout</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="hero-title" id="hero-title">महाराष्ट्र / विदर्भ मधील<br>प्रॉपर्टी शोधा 🏡</div>
+    <div class="hero-sub" id="hero-sub">जमीन, घर, शेती, दुकान – थेट संपर्क</div>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="परिसर, गाव शोधा... (e.g. Amravati plot)" oninput="dbSearch()">
+      <button class="search-btn" onclick="loadListings(true)">🔍</button>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-num" id="stat-total">–</div><div class="hero-stat-lbl">Listings</div></div>
+      <div class="hero-stat"><div class="hero-stat-num" id="stat-verified">–</div><div class="hero-stat-lbl">Verified</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">Maharashtra</div><div class="hero-stat-lbl">& Vidarbh Region</div></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">श्रेणी | Categories</div>
+    <div class="categories">
+      <button class="cat-btn active" onclick="filterCat('all',this)"><span class="cat-icon">🏘️</span><span class="cat-label">All<br><span class="cat-label-mr">सर्व</span></span></button>
+      <button class="cat-btn" onclick="filterCat('Plot',this)"><span class="cat-icon">🌿</span><span class="cat-label">Plot<br><span class="cat-label-mr">जमीन</span></span></button>
+      <button class="cat-btn" onclick="filterCat('House',this)"><span class="cat-icon">🏠</span><span class="cat-label">House<br><span class="cat-label-mr">घर</span></span></button>
+      <button class="cat-btn" onclick="filterCat('Farm',this)"><span class="cat-icon">🌾</span><span class="cat-label">Farm<br><span class="cat-label-mr">शेत</span></span></button>
+    </div>
+  </div>
+  <div class="filter-bar">
+    <button class="filter-chip active" onclick="setPrice(0,9e9,this)">सर्व</button>
+    <button class="filter-chip" onclick="setPrice(0,500000,this)"><₹5L</button>
+    <button class="filter-chip" onclick="setPrice(500000,1000000,this)">₹5–10L</button>
+    <button class="filter-chip" onclick="setPrice(1000000,2500000,this)">₹10–25L</button>
+    <button class="filter-chip" onclick="setPrice(2500000,5000000,this)">₹25–50L</button>
+    <button class="filter-chip" onclick="setPrice(5000000,9e9,this)">₹50L+</button>
+    <button class="filter-chip" onclick="openSheet()">⚙️ Filter</button>
+  </div>
+  <div class="ad-banner" style="cursor:pointer" onclick="window.open('https://homeloans.sbi.bank.in/','_blank')">
+    <div><div class="ad-text">🏦 SBI Home Loan</div><div class="ad-sub">8.5% व्याजदर • त्वरित मंजुरी</div></div>
+    <button class="ad-cta" onclick="event.stopPropagation();window.open('https://homeloans.sbi.bank.in/','_blank')">अर्ज करा</button>
+  </div>
+  <div class="section-title" style="padding:0 16px 10px">ताज्या जाहिराती | Latest Listings</div>
+  <div id="listingsGrid" class="listings-grid"></div>
+  <div id="loadMoreWrap" style="padding:16px;text-align:center;display:none">
+    <button onclick="loadMore()" style="background:var(--brand-light);color:var(--brand);border:2px solid var(--brand);border-radius:10px;padding:12px 32px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">अधिक पहा | Load More</button>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="event.stopPropagation();closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="Property Image" onclick="event.stopPropagation()">
+  <div class="lightbox-hint">Tap anywhere to close · Pinch to zoom</div>
+</div>
+
+<div id="page-detail" class="page">
+  <div class="detail-gallery" style="position:relative">
+    <button class="detail-back" onclick="showPage('home')">←</button>
+    <img id="d-img" src="" alt="" onclick="openLightbox(this.src)" onerror="this.src='https://placehold.co/600x260/f5e6e2/c84b31?text=No+Image'">
+  </div>
+  <div class="detail-content">
+    <div class="detail-badges">
+      <span class="d-badge" id="d-cat">–</span>
+      <span class="d-badge" id="d-ver">–</span>
+    </div>
+    <div class="detail-price" id="d-price">–</div>
+    <div class="detail-title" id="d-title">–</div>
+    <div class="detail-specs">
+      <div class="spec-item"><label>Area</label><span id="d-area">–</span></div>
+      <div class="spec-item"><label>Type</label><span id="d-type">–</span></div>
+      <div class="spec-item"><label>📍 Location</label><span id="d-loc">–</span></div>
+      <div class="spec-item"><label>📅 Posted</label><span id="d-date">–</span></div>
+    </div>
+    <div class="detail-section-title">वर्णन | Description</div>
+    <div class="detail-desc" id="d-desc">–</div>
+    <div class="detail-section-title">📍 Location</div>
+    <div id="d-map-wrap" class="detail-map">📍 Paratwada / Achalpur, Amravati</div>
+    <div class="detail-section-title">विक्रेता | Seller</div>
+    <div class="seller-card">
+      <div class="seller-avatar" id="d-avatar">👤</div>
+      <div>
+        <div style="font-size:15px;font-weight:700" id="d-seller">–</div>
+        <div style="font-size:11px;color:var(--muted)" id="d-stype">–</div>
+        <div style="font-size:11px;color:var(--green);font-weight:600" id="d-sver">–</div>
+      </div>
+    </div>
+  </div>
+  <div class="detail-action-bar">
+    <button class="btn-share-sm" id="d-save-btn" onclick="toggleSaveListing()">🔖</button>
+    <button class="btn-call" style="flex:1.2" onclick="handleCall()">📞 Call Owner</button>
+    <button class="btn-wa" style="flex:1.2" onclick="handleWA()">💬 WhatsApp</button>
+  </div>
+</div>
+
+<div id="page-post" class="page">
+  <div style="background:var(--brand);padding:16px;color:#fff">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button onclick="showPage('home')" style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">←</button>
+      <div><div style="font-size:18px;font-weight:800">जाहिरात द्या | Post Property</div><div style="font-size:11px;opacity:0.8">Free • Direct Contact • No Broker Fee</div></div>
+    </div>
+  </div>
+  <div class="form-wizard">
+    <div class="wizard-steps">
+      <div class="wizard-step active" id="ws-1">1. प्रकार</div>
+      <div class="wizard-step" id="ws-2">2. Details</div>
+      <div class="wizard-step" id="ws-3">3. फोटो</div>
+      <div class="wizard-step" id="ws-4">4. Submit</div>
+    </div>
+    <div class="form-section active" id="fs-1">
+      <div class="form-group">
+        <div class="form-label">मालमत्तेचा प्रकार <span class="req">*</span></div>
+        <div class="cat-select-grid">
+          <div class="cat-select-item active" onclick="selCat(this,'House')"><span class="cat-select-icon">🏠</span><div class="cat-select-label">House / घर</div></div>
+          <div class="cat-select-item" onclick="selCat(this,'Plot')"><span class="cat-select-icon">🌿</span><div class="cat-select-label">Plot / जमीन</div></div>
+          <div class="cat-select-item" onclick="selCat(this,'Farm')"><span class="cat-select-icon">🌾</span><div class="cat-select-label">Farm / शेत</div></div>
+          <div class="cat-select-item" onclick="selCat(this,'Shop')"><span class="cat-select-icon">🏪</span><div class="cat-select-label">Shop / दुकान</div></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">आपण कोण आहात? <span class="req">*</span></div>
+        <div style="display:flex;gap:10px">
+          <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--brand);border-radius:10px;cursor:pointer;background:var(--brand-light)">
+            <input type="radio" name="ptype" value="Owner" checked style="accent-color:var(--brand)">
+            <div><div style="font-weight:700;font-size:13px">🏡 Owner / मालक</div></div>
+          </label>
+          <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--border);border-radius:10px;cursor:pointer">
+            <input type="radio" name="ptype" value="Broker" style="accent-color:var(--brand)">
+            <div><div style="font-weight:700;font-size:13px">🤝 Broker / दलाल</div></div>
+          </label>
+        </div>
+      </div>
+      <button class="btn-next" onclick="goStep(2)">पुढे जा | Next →</button>
+    </div>
+    <div class="form-section" id="fs-2">
+      <div class="form-group">
+        <label class="form-label">Title / शीर्षक <span class="req">*</span></label>
+        <input class="form-input" type="text" id="f-title" maxlength="120" placeholder="उदा: 2 BHK घर अमरावती मध्ये, जवळ बाजारपेठ">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">किंमत ₹ <span class="req">*</span></label>
+          <input class="form-input" type="number" id="f-price" placeholder="1500000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Area / क्षेत्रफळ</label>
+          <input class="form-input" type="text" id="f-area" maxlength="30" placeholder="1500 sqft">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Bedrooms</label>
+          <select class="form-select" id="f-bhk">
+            <option value="">N/A</option>
+            <option>1 BHK</option><option>2 BHK</option><option>3 BHK</option><option>4+ BHK</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Property Age</label>
+          <select class="form-select" id="f-age">
+            <option>New</option><option><5 Years</option><option>5–10 Years</option><option>10+ Years</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Location / पत्ता <span class="req">*</span></label>
+        <input class="form-input" type="text" id="f-loc" maxlength="120" placeholder="गाव/परिसर, उदा: Civil Lines, Amravati">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Google Maps Link <span class="hint">(optional — exact location साठी)</span></label>
+        <input class="form-input" type="url" id="f-maps" placeholder="https://maps.app.goo.gl/...">
+        <div style="font-size:11px;color:var(--muted);margin-top:5px">📱 Google Maps उघडा → Share → Copy Link → येथे paste करा</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description / वर्णन</label>
+        <textarea class="form-textarea" id="f-desc" maxlength="1000" placeholder="मालमत्तेचे वर्णन, सुविधा, जवळचे landmarks..."></textarea>
+      </div>
+      <button class="btn-next" onclick="goStep(3)">पुढे जा | Next →</button>
+      <button class="btn-prev" onclick="goStep(1)">← मागे</button>
+    </div>
+    <div class="form-section" id="fs-3">
+      <div class="form-group">
+        <label class="form-label">फोटो <span class="hint">(max 5, optional)</span></label>
+        <div class="photo-upload-area" onclick="document.getElementById('photoInput').click()">
+          <div style="font-size:40px;margin-bottom:8px">📷</div>
+          <div style="font-weight:700;color:var(--dark)">फोटो निवडा / Take Photo</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">JPG/PNG • Auto compressed</div>
+        </div>
+        <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotos(this)">
+        <div class="photo-preview" id="photoPreview"></div>
+      </div>
+      <div class="info-box info-blue">💡 दिवसाच्या उजेडात काढलेले स्पष्ट फोटो जास्त buyers आकर्षित करतात!</div>
+      <button class="btn-next" onclick="goStep(4)">पुढे जा | Next →</button>
+      <button class="btn-prev" onclick="goStep(2)">← मागे</button>
+    </div>
+    <div class="form-section" id="fs-4">
+      <div id="fs4-nologin" style="display:none;text-align:center;padding:24px 0">
+        <div style="font-size:44px;margin-bottom:12px">🔐</div>
+        <div style="font-size:16px;font-weight:800;margin-bottom:8px">Submit करण्यापूर्वी Login करा</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:16px">Email OTP ने verify करा — Free</div>
+        <button class="btn-next" onclick="openLoginModal()">👤 Login / Sign Up</button>
+        <button class="btn-prev" onclick="goStep(3)">← मागे</button>
+      </div>
+      <div id="fs4-form">
+        <div class="info-box info-green" id="fs4-userinfo">Loading...</div>
+        <div class="form-group">
+          <label class="form-label">आपले नाव <span class="req">*</span></label>
+          <input class="form-input" type="text" id="f-name" maxlength="60" placeholder="पूर्ण नाव">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Phone <span class="req">*</span><br><span class="hint">हा नंबर buyers ला दिसेल – Call / WhatsApp साठी</span></label>
+          <div style="display:flex;gap:8px">
+            <input class="form-input" style="width:60px;flex-shrink:0;text-align:center;padding:12px 6px" value="+91" readonly>
+            <input class="form-input" type="tel" id="f-phone" placeholder="9876543210" maxlength="10">
+          </div>
+        </div>
+        <div class="info-box info-orange">🔒 Email फक्त account साठी. Phone number buyers ला दिसेल.</div>
+        <button class="btn-submit" id="submitBtn" onclick="submitListing()">🎉 जाहिरात सबमिट करा</button>
+        <button class="btn-prev" onclick="goStep(3)">← मागे</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="page-dash" class="page">
+  <div class="dash-header">
+    <div style="font-size:13px;opacity:0.8">नमस्कार 👋</div>
+    <div style="font-size:19px;font-weight:800" id="dash-name">–</div>
+    <div style="font-size:11px;opacity:0.7;margin-top:2px" id="dash-email">–</div>
+    <div class="dash-stats-row">
+      <div class="dash-stat-card"><div class="dash-stat-n" id="ds-l">0</div><div class="dash-stat-l">Listings</div></div>
+      <div class="dash-stat-card"><div class="dash-stat-n" id="ds-v">0</div><div class="dash-stat-l">Views</div></div>
+      <div class="dash-stat-card"><div class="dash-stat-n" id="ds-i">0</div><div class="dash-stat-l">Inquiries</div></div>
+    </div>
+  </div>
+  <div id="dash-nologin" style="padding:32px 16px;text-align:center;display:none">
+    <div style="font-size:50px;margin-bottom:12px">🔐</div>
+    <div style="font-size:17px;font-weight:800;margin-bottom:8px;color:var(--dark)">Login करा</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:20px">आपल्या जाहिराती पाहण्यासाठी</div>
+    <button class="btn-next" onclick="openLoginModal()">👤 Login / Create Account</button>
+  </div>
+  <div id="dash-content" style="display:none">
+    <div class="dash-tabs">
+      <button class="dash-tab active" onclick="dashTab(this,'dt-l')">जाहिराती</button>
+      <button class="dash-tab" onclick="dashTab(this,'dt-i')">Inquiries</button>
+      <button class="dash-tab" onclick="dashTab(this,'dt-p')">Profile</button>
+    </div>
+    <div id="dt-l" style="padding-top:14px">
+      <div id="myListingsGrid"></div>
+      <div style="padding:16px">
+        <button class="btn-post-nav" style="width:100%;border-radius:12px;padding:14px;font-size:15px;justify-content:center" onclick="showPage('post')">+ नवीन जाहिरात द्या</button>
+      </div>
+    </div>
+    <div id="dt-i" style="display:none;padding:16px">
+      <div class="info-box info-blue">Inquiry tracking — जेव्हा कुणी Call/WhatsApp करतो, ते येथे दिसेल.</div>
+      <div id="myInqGrid"></div>
+    </div>
+    <div id="dt-p" style="display:none;padding:16px">
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:60px;margin-bottom:8px">👤</div>
+        <div style="font-size:18px;font-weight:800" id="p-name">–</div>
+        <div style="font-size:13px;color:var(--muted)" id="p-email">–</div>
+      </div>
+      <button style="width:100%;background:var(--bg);color:var(--text);border:1.5px solid var(--border);border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+</div>
+
+<div id="page-admin" class="page">
+  <div style="background:var(--dark);padding:16px;color:#fff;display:flex;align-items:center;gap:10px">
+    <button onclick="showPage('home')" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">←</button>
+    <div><div style="font-size:18px;font-weight:800">🛡️ Admin Panel</div><div style="font-size:11px;opacity:0.7">Listing Review & Management</div></div>
+  </div>
+  <div id="admin-login" style="padding:24px 16px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px">Admin Password</div>
+    <input class="form-input" type="password" id="admin-pass" placeholder="Password" onkeydown="if(event.key==='Enter')adminLogin()">
+    <button class="btn-next" style="margin-top:12px" onclick="adminLogin()">Login →</button>
+  </div>
+  <div id="admin-content" style="display:none;padding-top:12px">
+    <div style="padding:0 16px 12px;display:flex;gap:8px;overflow-x:auto">
+      <button class="filter-chip active" id="at-p" onclick="loadAdminTab('pending',this)">⏳ Pending</button>
+      <button class="filter-chip" id="at-a" onclick="loadAdminTab('approved',this)">✓ Approved</button>
+      <button class="filter-chip" id="at-r" onclick="loadAdminTab('rejected',this)">✗ Rejected</button>
+      <button class="filter-chip" id="at-all" onclick="loadAdminTab('all',this)">All</button>
+    </div>
+    <div id="adminGrid"></div>
+  </div>
+</div>
+
+<div id="page-success" class="page">
+  <div class="success-screen">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">जाहिरात सबमिट झाली!</div>
+    <div class="success-sub">Admin 24 तासांत Review करेल.<br>मंजूर झाल्यावर Live होईल.</div>
+    <div style="background:var(--brand-light);border-radius:12px;padding:14px;margin-top:16px;width:100%;max-width:320px">
+      <div style="font-size:13px;font-weight:700;color:var(--brand);margin-bottom:6px">📣 मित्रांना Share करा!</div>
+      <button style="width:100%;margin-top:6px;background:#25D366;color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit" onclick="window.open('https://wa.me/?text='+encodeURIComponent('मालमत्ता खरेदी-विक्री: https://vidarbhproperties.in'),'_blank')">💬 WhatsApp Share</button>
+    </div>
+    <button class="btn-home" onclick="showPage('home')">🏡 Home</button>
+  </div>
+</div>
+
+<div id="page-saved" class="page">
+  <div style="background:var(--brand);padding:16px;color:#fff;display:flex;align-items:center;gap:10px">
+    <div style="font-size:18px;font-weight:800">🔖 Saved Listings</div>
+    <div style="font-size:12px;opacity:0.8;margin-left:auto" id="saved-count">0 saved</div>
+    <button onclick="showPage('home')" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ Browse</button>
+  </div>
+  <div id="savedGrid" style="padding:16px;padding-bottom:90px"></div>
+</div>
+<div class="bottom-nav" id="bottomNav">
+  <button class="bn-item active" id="bn-home" onclick="showPage('home')"><span class="bn-icon">🏡</span><span class="bn-label">Home</span></button>
+  <button class="bn-item" onclick="showPage('home');setTimeout(()=>document.getElementById('searchInput').focus(),200)"><span class="bn-icon">🔍</span><span class="bn-label">शोधा</span></button>
+  <button class="bn-item post" onclick="checkLoginPost()"><span class="bn-icon">➕</span><span class="bn-label">Post</span></button>
+  <button class="bn-item" id="bn-saved" onclick="showPage('saved')"><span class="bn-icon">🔖</span><span class="bn-label">Saved</span></button>
+  <button class="bn-item" id="bn-dash" onclick="showPage('dash')"><span class="bn-icon">👤</span><span class="bn-label">My Ads</span></button>
+</div>
+
+<div class="sheet-overlay" id="filterSheet" onclick="if(event.target===this)closeSheet()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="font-size:16px;font-weight:800;margin-bottom:14px">⚙️ Filter करा</div>
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <input type="checkbox" id="fo-owner" style="width:18px;height:18px;accent-color:var(--brand)">
+      <span style="font-size:14px;font-weight:600">फक्त मालक (Owner Only)</span>
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <input type="checkbox" id="fo-verified" style="width:18px;height:18px;accent-color:var(--brand)">
+      <span style="font-size:14px;font-weight:600">Verified Only ✓</span>
+    </label>
+    <div style="font-weight:700;font-size:13px;margin:12px 0 8px">BHK</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="filter-chip active" onclick="selBhk(this,'')">Any</button>
+      <button class="filter-chip" onclick="selBhk(this,'1 BHK')">1 BHK</button>
+      <button class="filter-chip" onclick="selBhk(this,'2 BHK')">2 BHK</button>
+      <button class="filter-chip" onclick="selBhk(this,'3 BHK')">3 BHK</button>
+    </div>
+    <button style="width:100%;background:var(--brand);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:16px" onclick="applyFilter()">✓ Apply Filter</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+
+<!-- JavaScript Modules -->
+<script src="/js/config.js"></script>
+<script src="/js/otp.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/listings.js"></script>
+<script src="/js/detail.js"></script>
+<script src="/js/post.js"></script>
+<script src="/js/dashboard.js"></script>
+<script src="/js/admin.js"></script>
+<script src="/js/filters.js"></script>
+<script src="/js/ui.js"></script>
+
+<script>
+// Startup
+init();
+</script>
+</body>
+</html>
